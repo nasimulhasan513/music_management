@@ -150,21 +150,26 @@ export default {
       comment_alert_message: "Please wait!!Your Comment is being submitted",
     };
   },
-  async created() {
-    const docSnapshot = await songsCollection.doc(this.$route.params.id).get();
-    if (!docSnapshot.exists) {
-      this.$router.push({ name: "home" });
-    }
+  async beforeRouteEnter(to, from, next) {
+    const docSnapshot = await songsCollection.doc(to.params.id).get();
 
-    const { sort } = this.$route.query;
+    next((vm) => {
+      if (!docSnapshot.exists) {
+        vm.$router.push({ name: "home" });
+      }
 
-    this.sort = sort === "1" || sort === "2" ? sort : "1";
+      const { sort } = vm.$route.query;
 
-    this.song = docSnapshot.data();
-    this.getComments();
+      vm.sort = sort === "1" || sort === "2" ? sort : "1";
+
+      vm.song = docSnapshot.data();
+      vm.getComments();
+    });
   },
   computed: {
-    ...mapState(["userLoggedIn"]),
+    ...mapState({
+      userLoggedIn: (state) => state.auth.userLoggedIn,
+    }),
     sortedComments() {
       return this.comments.slice().sort((a, b) => {
         if (this.sort === "1")
